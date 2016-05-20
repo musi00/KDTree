@@ -287,15 +287,15 @@ KDTree<N, ElemType>::operator[] (const Point<N>& pt) {
 
 template <size_t N, typename ElemType> ElemType& 
 KDTree<N, ElemType>::at(const Point<N>& pt) {
-  KDTreeNode* node = findNode(pt);
-  if (!node)
-    throw out_of_range("Point not in k-d tree");
-  else
-    return node->value;
+  /* to avoid duplicating code use the constant version of this function
+   * along with const_cast to remove constantness of the returned argument
+   */
+  const KDTree& const_this = *this;
+  return const_cast<ElemType&>(const_this.at(pt));
 }
 
-template <size_t N, typename ElemType> const 
-ElemType& KDTree<N, ElemType>::at(const Point<N>& pt) const {
+template <size_t N, typename ElemType> const ElemType& 
+KDTree<N, ElemType>::at(const Point<N>& pt) const {
   KDTreeNode* node = findNode(pt);
   if (!node)
     throw out_of_range("Point not in k-d tree");
