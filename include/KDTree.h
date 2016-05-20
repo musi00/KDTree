@@ -18,7 +18,8 @@
 #include <unordered_map>
 using namespace std;
 
-template <size_t N, typename ElemType> class KDTree {
+template <size_t N, typename ElemType> 
+class KDTree {
 public:
 	/* Constructor: KDTree();
 	 * Usage: KDTree myTree;
@@ -27,15 +28,8 @@ public:
 	 */
 	KDTree();
 
-	/* Destructor: ~KDTree()
-	 * Usage: (implicit)
-	 * ----------------------------------------------------
-	 * Cleans up all resources used by the KDTree.
-	 */
-	/* ~KDTree(); */
-
-	/* KDTree(const KDTree& rhs);
-	 * KDTree& operator= (const KDTree& rhs);
+	/* Copy constructor: KDTree(const KDTree& rhs);
+	 * Assignment operator: KDTree& operator= (const KDTree& rhs);
 	 * Usage: KDTree one = two;
 	 * Usage: one = two;
 	 * -----------------------------------------------------
@@ -113,12 +107,14 @@ public:
 	ElemType kNNValue(const Point<N>& key, size_t k) const;
 
 private:
-  /* TODO: Add implementation details here. */
-  
+  /* Enum used to indicate at which branch (left or right) 
+   * should a new child be created
+   */
   enum ChildIndicator {UNSET, LEFT, RIGHT};
 
+  /* The Node structure used to build the KDTree */
   typedef struct KDTreeNode {
-  public:
+    /* Default Constructor */
     KDTreeNode() : value() {}
 
     /* Copy constructor */
@@ -126,7 +122,7 @@ private:
       copyOther(other);
     }
 
-    /* assignment operator */
+    /* Assignment operator */
     KDTreeNode& operator=(const KDTreeNode& other) {
       /* destroy old children */
       left.reset(nullptr);
@@ -139,6 +135,7 @@ private:
       return *this;
     }
 
+    /* Copy KDTreeNode other to this KDTreeNode */
     void copyOther (const KDTreeNode& other) {
       point = other.point;
       value = other.value;
@@ -155,24 +152,51 @@ private:
     }
 
     /* Members */
-    // TODO: Add underscore to all memebers and everywhere they are used
     Point<N> point;
     ElemType value;
     unique_ptr<KDTreeNode> left;
     unique_ptr<KDTreeNode> right;
   } KDTreeNode;
 
+	/* Copy the KDTree, other, to this KDTree  */
   void copyOther (const KDTree& rhs);
-  KDTreeNode* findNode(const Point<N>& pt, KDTreeNode** parent_ptr = nullptr, ChildIndicator* which_child = nullptr) const;
   
-  KDTreeNode* addNewNode (const Point<N>& pt, const ElemType& value, KDTreeNode* parent, const ChildIndicator& which_child);
-  
-  void kNNValueHelper(const Point<N>& key, KDTreeNode* curr, BoundedPQueue<ElemType>* bounded_priority_q, int cmp_index) const;
+  /* Attempt to find the node with key pt
+   * If the node is found, a pointer to the node is returned, otherwise null is returned.
+   * In both bases, two variables are set: the parent of the last 
+   * node traversed (the last node traversed could be null) and the ChildIndicator which
+   * indicates which child is this node relative to the parent
+   */
+  KDTreeNode* findNode(
+      const Point<N>& pt, 
+      KDTreeNode** parent_ptr = nullptr, 
+      ChildIndicator* which_child = nullptr) const;
  
+  /* Add a new child to parent node.  The which_child parameter indicates which child
+   * get the new node
+   */
+  KDTreeNode* addNewNode (
+      const Point<N>& pt, 
+      const ElemType& value, 
+      KDTreeNode* parent, 
+      const ChildIndicator& which_child);
+  
+  /* A helper function for KNNValue to carry out the recursion */
+  void kNNValueHelper(
+      const Point<N>& key, 
+      KDTreeNode* curr, 
+      BoundedPQueue<ElemType>* 
+      bounded_priority_q, 
+      int cmp_index) const;
+ 
+  /* Given a BoundedPQueue of the k nearest neighbours, return the one that occurs 
+   * most often in the queue
+   */
   ElemType mostFrequentElement(BoundedPQueue<ElemType>* bounded_priority_q) const;
 
-  /* Members */
- 
+  /* * * * * Members * * * * */
+  
+  /* The root of the KDTree */
   unique_ptr<KDTreeNode> root_;
  
   /* Dimension of points used as keys for the tree nodes */
@@ -180,27 +204,22 @@ private:
 
   /* Number of nodes in the tree */
   size_t size_;
-
 };
 
 /* * * * * Implementation Below This Point * * * * */
-
-template <size_t N, typename ElemType> KDTree<N, ElemType>::KDTree() {
+template <size_t N, typename ElemType> 
+KDTree<N, ElemType>::KDTree() {
   dim_ = N;
   size_ = 0;
 }
-
-/*template <size_t N, typename ElemType> KDTree<N, ElemType>::~KDTree() {
-  // TODO: Fill this in.
-}*/
 
 template <size_t N, typename ElemType>
 KDTree<N, ElemType>::KDTree(const KDTree& rhs) {
  copyOther(rhs); 
 }
 
-template <size_t N, typename ElemType>
-typename KDTree<N, ElemType>::KDTree& KDTree<N, ElemType>::operator= (const KDTree& rhs) {
+template <size_t N, typename ElemType> typename KDTree<N, ElemType>::KDTree& 
+KDTree<N, ElemType>::operator= (const KDTree& rhs) {
   root_.reset(nullptr);
   if (this != &rhs) {
     copyOther(rhs);
@@ -208,8 +227,8 @@ typename KDTree<N, ElemType>::KDTree& KDTree<N, ElemType>::operator= (const KDTr
   return *this;
 }
 
-template <size_t N, typename ElemType>
-void KDTree<N, ElemType>::copyOther (const KDTree& rhs) {
+template <size_t N, typename ElemType> void 
+KDTree<N, ElemType>::copyOther (const KDTree& rhs) {
   dim_ = rhs.dim_;
   size_ = rhs.size_;
   if (rhs.root_) {
@@ -219,29 +238,28 @@ void KDTree<N, ElemType>::copyOther (const KDTree& rhs) {
   }
 }
 
-
-template <size_t N, typename ElemType> size_t KDTree<N, ElemType>::dimension() const {
+template <size_t N, typename ElemType> size_t 
+KDTree<N, ElemType>::dimension() const {
   return dim_;
 }
 
-
-template <size_t N, typename ElemType> 
-size_t KDTree<N, ElemType>::size() const {
+template <size_t N, typename ElemType> size_t 
+KDTree<N, ElemType>::size() const {
   return size_;
 }
 
-template <size_t N, typename ElemType> bool KDTree<N, ElemType>::empty() const {
+template <size_t N, typename ElemType> bool 
+KDTree<N, ElemType>::empty() const {
   return (size_ == 0);
 }
 
-template <size_t N, typename ElemType> 
-bool KDTree<N, ElemType>::contains(const Point<N>& pt) const {
+template <size_t N, typename ElemType> bool 
+KDTree<N, ElemType>::contains(const Point<N>& pt) const {
   return (findNode(pt) != nullptr);
 }
 
-
-template <size_t N, typename ElemType> 
-void KDTree<N, ElemType>::insert(const Point<N>& pt, const ElemType& value) {
+template <size_t N, typename ElemType> void 
+KDTree<N, ElemType>::insert(const Point<N>& pt, const ElemType& value) {
   KDTreeNode* parent;
   KDTreeNode** parent_ptr = &parent;
   ChildIndicator which_child = UNSET;
@@ -254,10 +272,8 @@ void KDTree<N, ElemType>::insert(const Point<N>& pt, const ElemType& value) {
   }
 }
 
-
-
-template <size_t N, typename ElemType> 
-ElemType& KDTree<N, ElemType>::operator[] (const Point<N>& pt) {
+template <size_t N, typename ElemType> ElemType& 
+KDTree<N, ElemType>::operator[] (const Point<N>& pt) {
   KDTreeNode* parent;
   KDTreeNode** parent_ptr = &parent;
   ChildIndicator which_child = UNSET;
@@ -269,8 +285,8 @@ ElemType& KDTree<N, ElemType>::operator[] (const Point<N>& pt) {
   return node->value;
 }
 
-template <size_t N, typename ElemType> 
-ElemType& KDTree<N, ElemType>::at(const Point<N>& pt) {
+template <size_t N, typename ElemType> ElemType& 
+KDTree<N, ElemType>::at(const Point<N>& pt) {
   KDTreeNode* node = findNode(pt);
   if (!node)
     throw out_of_range("Point not in k-d tree");
@@ -278,8 +294,8 @@ ElemType& KDTree<N, ElemType>::at(const Point<N>& pt) {
     return node->value;
 }
 
-template <size_t N, typename ElemType> 
-const ElemType& KDTree<N, ElemType>::at(const Point<N>& pt) const {
+template <size_t N, typename ElemType> const 
+ElemType& KDTree<N, ElemType>::at(const Point<N>& pt) const {
   KDTreeNode* node = findNode(pt);
   if (!node)
     throw out_of_range("Point not in k-d tree");
@@ -287,8 +303,8 @@ const ElemType& KDTree<N, ElemType>::at(const Point<N>& pt) const {
     return node->value;
 }
 
-template <size_t N, typename ElemType> 
-ElemType KDTree<N, ElemType>::kNNValue(const Point<N>& key, size_t k) const {
+template <size_t N, typename ElemType> ElemType
+KDTree<N, ElemType>::kNNValue(const Point<N>& key, size_t k) const {
   if (empty()) {
     throw out_of_range("Can't perform k-nearest neighbour search on empty tree");
   }
@@ -302,24 +318,27 @@ ElemType KDTree<N, ElemType>::kNNValue(const Point<N>& key, size_t k) const {
   return mostFrequentElement(&bounded_priority_q);
 }
 
+template <size_t N, typename ElemType> typename KDTree<N, ElemType>::KDTreeNode* 
+KDTree<N, ElemType>::findNode (
+    const Point<N>& pt, 
+    KDTreeNode** parent_ptr, 
+    ChildIndicator* which_child) const {
 
-template <size_t N, typename ElemType> 
-typename KDTree<N, ElemType>::KDTreeNode* KDTree<N, ElemType>::findNode (const Point<N>& pt,
-                                                             KDTreeNode** parent_ptr,
-                                                             ChildIndicator* which_child) const {
+  /* start comparing at the root of the tree */
   KDTreeNode* curr = root_.get();
   if (parent_ptr)
     *parent_ptr = nullptr;
+  
   ChildIndicator tmp = UNSET;
   if (!which_child)
     which_child = &tmp;  
+
   int cmp_index = 0;
 
   while (curr != nullptr && curr->point != pt) {
-   if (parent_ptr)
-    *parent_ptr = curr;
-
-   if ( pt[cmp_index] <= curr->point[cmp_index]) {
+    if (parent_ptr)
+      *parent_ptr = curr;
+    if ( pt[cmp_index] <= curr->point[cmp_index]) {
       curr = curr->left.get();
       *which_child = LEFT;
     }
@@ -333,13 +352,19 @@ typename KDTree<N, ElemType>::KDTreeNode* KDTree<N, ElemType>::findNode (const P
   return curr;
 }
 
-
-template <size_t N, typename ElemType> 
-typename KDTree<N, ElemType>::KDTreeNode* KDTree<N, ElemType>::addNewNode (const Point<N>& pt, const ElemType& value, KDTreeNode* parent, const ChildIndicator& which_child) {
+template <size_t N, typename ElemType> typename KDTree<N, ElemType>::KDTreeNode* 
+KDTree<N, ElemType>::addNewNode (
+    const Point<N>& pt, 
+    const ElemType& value, 
+    KDTreeNode* parent, 
+    const ChildIndicator& which_child) {
+  /* create a new node */
   unique_ptr<KDTreeNode> new_node (new KDTreeNode);
   new_node->point = pt;
   new_node->value = value;
   KDTreeNode* new_node_raw_ptr = new_node.get();
+
+  /* if parent is null that means this is the first node to be inserted in the tree */
   if(!parent) {
     root_ = move(new_node);
   }
@@ -353,14 +378,18 @@ typename KDTree<N, ElemType>::KDTreeNode* KDTree<N, ElemType>::addNewNode (const
   return new_node_raw_ptr;
 }
 
-template <size_t N, typename ElemType>
-void KDTree<N, ElemType>::kNNValueHelper(const Point<N>& key, KDTreeNode* curr, BoundedPQueue<ElemType>* bounded_priority_q, int cmp_index) const {
+template <size_t N, typename ElemType> void 
+KDTree<N, ElemType>::kNNValueHelper(
+    const Point<N>& key, 
+    KDTreeNode* curr, 
+    BoundedPQueue<ElemType>* bounded_priority_q, 
+    int cmp_index) const {
   if (!curr)
     return;
   
-  /* distance from node's point to the key point is the priority in the queue*/
+  /* distance from node's point to the key point is the priority value */
   double priority = Distance(curr->point, key);
-  bounded_priority_q->enqueue(curr->value, priority);
+  bounded_priority_q->push(curr->value, priority);
 
   /* Recursively search the tree for the test point (key) */
   if (key[cmp_index] <= curr->point[cmp_index])
@@ -368,44 +397,39 @@ void KDTree<N, ElemType>::kNNValueHelper(const Point<N>& key, KDTreeNode* curr, 
   else
     kNNValueHelper(key, curr->right.get(), bounded_priority_q, (cmp_index + 1) % N);
 
-  /* if the queue isn't full or the current direction of the candidate hypersphere 
+  /* if the queue isn't full or the radius of the candidate hypersphere 
    * is less than the distance of the farthest k-neighrest neighbour then examine
-   * the other subtree */
-  if (!bounded_priority_q->full() || fabs(curr->point[cmp_index] - key[cmp_index]) < bounded_priority_q->worst()) {
+   * the other subtree 
+   */
+  if (!bounded_priority_q->full() || 
+      fabs(curr->point[cmp_index] - key[cmp_index]) < bounded_priority_q->worst()) {
     /* recursivly search the other subtree */
     if (key[cmp_index] <= curr->point[cmp_index])
       kNNValueHelper(key, curr->right.get(), bounded_priority_q, (cmp_index + 1) % N);
     else
       kNNValueHelper(key, curr->left.get(), bounded_priority_q, (cmp_index + 1) % N);
   }
-
 }
 
-
-template <size_t N, typename ElemType>
-ElemType KDTree<N, ElemType>::mostFrequentElement(BoundedPQueue<ElemType>* bounded_priority_q) const {
-  unordered_map<ElemType,int> elem_count;
-
+template <size_t N, typename ElemType> ElemType 
+KDTree<N, ElemType>::mostFrequentElement(
+    BoundedPQueue<ElemType>* bounded_priority_q) const {
   /* Create a table of element frequency using a hash table.  When the same element
    * is encountered again it hashes to the same cell causing the count value to go
-   * up by one */
+   * up by one 
+   */
+  unordered_map<ElemType,int> elem_count;
   while(!bounded_priority_q->empty()) {
     ++elem_count[bounded_priority_q->top().second];
     bounded_priority_q->pop();
   }
 
-  auto cmp = [] (const pair<ElemType,int>& a, const pair<ElemType,int>& b)
-    {
+  /* lambda to compare the hash table element by their frequency */
+  auto cmp = [] (const pair<ElemType,int>& a, const pair<ElemType,int>& b) {
       return a.second < b.second;
-    };
-
+  };
   return max_element(elem_count.begin(), elem_count.end(), cmp)->first;
 }
-
-
- 
-
-
 
 
 #endif

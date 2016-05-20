@@ -31,10 +31,10 @@
  * Beyond these restrictions, the bounded priority queue behaves
  * similarly to other containers.  You can query its size using
  * size() and check whether it is empty using empty().  You
- * can enqueue an element into the bounded priority queue by
+ * can push an element into the bounded priority queue by
  * writing
  *
- * bpq.enqueue(elem, priority);
+ * bpq.push(elem, priority);
  *
  * Note that after enqueuing the element, there is no guarantee 
  * that the value will actually be in the queue.  If the queue
@@ -61,12 +61,12 @@
 #include <limits>
 using namespace std;
 
-template <typename T> class BoundedPQueue
-{
+template <typename T> 
+class BoundedPQueue {
 public:
-	
-  typedef pair<double,T> QueueType;
 
+	/* Typedef and compare functor of the Queue elements */
+  typedef pair<double,T> QueueType;
   class QueueTypeComparator {
   public:
     bool operator() (const QueueType& a, const QueueType& b) {
@@ -74,7 +74,7 @@ public:
     }
   };
 
-/* Constructor: BoundedPQueue(size_t maxSize);
+  /* Constructor: BoundedPQueue(size_t maxSize);
 	 * Usage: BoundedPQueue<int> bpq(15);
 	 * --------------------------------------------------
 	 * Constructs a new, empty BoundedPQueue with
@@ -82,16 +82,16 @@ public:
 	 */
 	explicit BoundedPQueue(size_t maxSize);
 
-	/* void enqueue(const T& value, double priority);
-	 * Usage: bpq.enqueue("Hi!", 2.71828);
+	/* void push(const T& value, double priority);
+	 * Usage: bpq.push("Hi!", 2.71828);
 	 * --------------------------------------------------
-	 * Enqueues a new element into the BoundedPQueue with
+	 * pushs a new element into the BoundedPQueue with
 	 * the specified priority.  If this overflows the maximum
 	 * size of the queue, the element with the highest
 	 * priority will be deleted from the queue.  Note that
 	 * this might be the element that was just added.
 	 */
-	void enqueue(const T& value, double priority);
+	void push(const T& value, double priority);
 
   void pop(); 
 	/* size_t size() const;
@@ -118,37 +118,40 @@ public:
 	 * Usage: double highestPriority = bpq.worst();
 	 * --------------------------------------------------
 	 * worst() returns the largest priority of an element
-	 * stored in the container.  If an element is enqueued
+	 * stored in the container.  If an element is pushd
 	 * with a priority above this value, it will automatically
-	 * be deleted from the queue.  The unction returns
+	 * be deleted from the queue.  The function returns
 	 * numeric_limits<double>::infinity() if the queue is
 	 * empty.
 	 */
 	double worst() const;
-  
-  const QueueType& top();
+
+  /* const QueueType& top() const;
+   * Usage QueueType& top_of_queue = bpq.top() 
+   * --------------------------------------------------
+   * Returns a reference to top of the queue (i.e the max
+   * priority element)
+   */
+  const QueueType& top() const;
 	
 
 private:
 
   /* This class is layered on top of an stl priority queue */
 	priority_queue<QueueType, vector<QueueType>, QueueTypeComparator> elems;
+
+  /* Maximum number of elements the queue can hold */
 	size_t maximumSize;
 };
 
 /* * * * * Implementation Below This Point * * * * */
 
-/* Constructor accepts and stores the maximum size. */
-template <typename T> BoundedPQueue<T>::BoundedPQueue(size_t maxSize)
-{
+template <typename T> BoundedPQueue<T>::BoundedPQueue(size_t maxSize) {
 	maximumSize = maxSize;
 }
 
-/* enqueue adds the element to the map, then deletes the last element of the
- * map if there size exceeds the maximum size.
- */
-template <typename T> void BoundedPQueue<T>::enqueue(const T& value, double priority)
-{
+template <typename T> void 
+BoundedPQueue<T>::push(const T& value, double priority) {
 	/* Add the element to the collection. */
 	elems.emplace(priority, value);
 
@@ -159,41 +162,40 @@ template <typename T> void BoundedPQueue<T>::enqueue(const T& value, double prio
 	}
 }
 
-template <typename T> void BoundedPQueue<T>::pop() {
+template <typename T> 
+void BoundedPQueue<T>::pop() {
   if (size() > 0) {
     elems.pop();
   }
 }
 
-template <typename T> const typename BoundedPQueue<T>::QueueType& BoundedPQueue<T>::top() {
+template <typename T> const typename BoundedPQueue<T>::QueueType& 
+BoundedPQueue<T>::top() const {
   return elems.top();
 }
 
-/* size() and empty() call directly down to the underlying map. */
-template <typename T> size_t BoundedPQueue<T>::size() const
-{
+template <typename T> size_t 
+BoundedPQueue<T>::size() const {
 	return elems.size();
 }
-template <typename T> bool BoundedPQueue<T>::empty() const
-{
+
+template <typename T> bool 
+BoundedPQueue<T>::empty() const {
 	return elems.empty();
 }
 
-template <typename T> bool BoundedPQueue<T>::full() const
-{
+template <typename T> bool 
+BoundedPQueue<T>::full() const {
 	return size() == maxSize();
 }
 
-/* maxSize just returns the appropriate data member. */
-template <typename T> size_t BoundedPQueue<T>::maxSize() const
-{
+template <typename T> size_t 
+BoundedPQueue<T>::maxSize() const {
 	return maximumSize;
 }
 
-/* The worst() functions checks if the queue is empty,
- * and if so return infinity.
- */
-template <typename T> double BoundedPQueue<T>::worst() const
+template <typename T> double 
+BoundedPQueue<T>::worst() const
 {
 	return empty()? numeric_limits<double>::infinity() : elems.top().first;
 }

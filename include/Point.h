@@ -10,7 +10,8 @@
 #ifndef Point_Included
 #define Point_Included
 
-template <size_t N> class Point {
+template <size_t N> 
+class Point {
 public:
 	/**
 	 * double& operator[] (size_t index);
@@ -80,36 +81,44 @@ template <size_t N> bool operator== (const Point<N>& one, const Point<N>& two);
 #include <algorithm>
 
 /* Element access operators just read the array at the specified index. */
-template <size_t N> double& Point<N>::operator[] (size_t index) {
+template <size_t N> double& 
+Point<N>::operator[] (size_t index) {
 	return mPoints[index];
 }
-template <size_t N> double Point<N>::operator[] (size_t index) const {
+template <size_t N> double 
+Point<N>::operator[] (size_t index) const {
 	return mPoints[index];
 }
 
 /* size just returns the template parameter. */
-template <size_t N> size_t Point<N>::size() const {
+template <size_t N> size_t 
+Point<N>::size() const {
 	return N;
 }
 
 /* Iterators span the range the same way that our Vector iterators do. */
-template <size_t N> typename Point<N>::iterator Point<N>::begin() {
+template <size_t N> typename Point<N>::iterator 
+Point<N>::begin() {
 	return mPoints;
 }
-template <size_t N> typename Point<N>::const_iterator Point<N>::begin() const {
+template <size_t N> typename Point<N>::const_iterator 
+Point<N>::begin() const {
 	return mPoints;
 }
-template <size_t N> typename Point<N>::iterator Point<N>::end() {
+template <size_t N> typename Point<N>::iterator 
+Point<N>::end() {
 	return begin() + size();
 }
-template <size_t N> typename Point<N>::const_iterator Point<N>::end() const {
+template <size_t N> typename Point<N>::const_iterator 
+Point<N>::end() const {
 	return begin() + size();
 }
 
 /* Computing the distance computes the sum of the squares of the differences between
  * matching components.
  */
-template <size_t N> double Distance(const Point<N>& one, const Point<N>& two) {
+template <size_t N> double 
+Distance(const Point<N>& one, const Point<N>& two) {
 	double result = 0.0;
 	for (size_t i = 0; i < N; ++i)
 		result += (one[i] - two[i]) * (one[i] - two[i]);
@@ -119,10 +128,12 @@ template <size_t N> double Distance(const Point<N>& one, const Point<N>& two) {
 /* Equality is implemented using the equal algorithm, which takes in two ranges and
  * reports whether they contain equal values.
  */
-template <size_t N> bool operator== (const Point<N>& one, const Point<N>& two) {
+template <size_t N> bool 
+operator== (const Point<N>& one, const Point<N>& two) {
 	return std::equal(one.begin(), one.end(), two.begin());
 }
-template <size_t N> bool operator!= (const Point<N>& one, const Point<N>& two) {
+template <size_t N> bool 
+operator!= (const Point<N>& one, const Point<N>& two) {
 	return !(one == two);
 }
 
